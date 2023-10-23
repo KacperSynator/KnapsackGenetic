@@ -3,7 +3,20 @@ use knapsack_genetic::genetic_algorithm::{genetic_algorithm, GeneticAlgorithmDat
 use knapsack_genetic::mutation_method::MutationMethod;
 use knapsack_genetic::selection_method::SelectionMethod;
 
+use knapsack_genetic::utils::{plot_graph, GraphData};
 use log::{error, info};
+
+fn run_and_plot_genetic_algorithm(data: &GeneticAlgorithmData<i32>, graph_data: &GraphData) {
+    match genetic_algorithm(data) {
+        Ok(result) => {
+            info!("Best chromosome: {:?}", result.best_individual);
+            if let Err(e) = plot_graph(&result, graph_data) {
+                error!("Failed to plot with error: {e}");
+            }
+        }
+        Err(e) => error!("Genetic algorithm failed with error: {e}"),
+    }
+}
 
 fn main() {
     pretty_env_logger::init();
@@ -21,8 +34,10 @@ fn main() {
         selection_method: SelectionMethod::Tournament { size: 10 },
     };
 
-    match genetic_algorithm(&data) {
-        Ok(result) => info!("Best chromosome: {:?}", result),
-        Err(e) => error!("Genetic algorithm failed with error: {e}"),
-    }
+    let graph_data = GraphData {
+        title: "GA 1",
+        ..Default::default()
+    };
+
+    run_and_plot_genetic_algorithm(&data, &graph_data);
 }

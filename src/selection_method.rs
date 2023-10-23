@@ -31,7 +31,7 @@ where
     match method {
         SelectionMethod::Tournament { size } => tournament_selection(population, *size),
         SelectionMethod::Roulette => Err(Error::from(NotImplementedError("Roulette".to_string()))),
-        SelectionMethod::Elitism { n_elites } => {
+        SelectionMethod::Elitism { n_elites: _ } => {
             Err(Error::from(NotImplementedError("Elitism".to_string())))
         }
     }
@@ -50,6 +50,7 @@ where
 
     let mut cloned_population: Vec<Individual<T>> = population.to_vec();
     cloned_population.sort();
+    cloned_population.reverse();
     let elites: Vec<Individual<T>> = cloned_population[..n_elites].to_vec();
 
     Ok(elites)

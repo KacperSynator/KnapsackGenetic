@@ -39,7 +39,18 @@ where
     pub selection_method: SelectionMethod,
 }
 
-pub fn genetic_algorithm<T>(data: &GeneticAlgorithmData<T>) -> Result<Individual<T>, Error>
+#[derive(Debug)]
+pub struct GeneticAlgorithmResultData<T>
+where
+    T: Num,
+{
+    pub best_individual: Individual<T>,
+    pub score_per_generation: Vec<T>,
+}
+
+pub fn genetic_algorithm<T>(
+    data: &GeneticAlgorithmData<T>,
+) -> Result<GeneticAlgorithmResultData<T>, Error>
 where
     T: Num + std::fmt::Debug + Default + for<'a> std::iter::Sum<&'a T> + PartialOrd + Ord + Clone,
 {
@@ -53,7 +64,12 @@ where
         population
     );
 
-    let mut best_individual: Individual<T> = find_best_individual(&population);
+    let mut result = GeneticAlgorithmResultData {
+        best_individual: find_best_individual(&population),
+        score_per_generation: Vec::new(),
+    };
+
+    result.score_per_generation.reserve(data.population_size);
 
     for _ in 0..data.generations {
         population
@@ -61,14 +77,18 @@ where
             .for_each(|individual| individual.fitness_score = calculate_fitness(data, individual));
 
         let current_best_individual = find_best_individual(&population);
-        if current_best_individual > best_individual {
-            best_individual = current_best_individual;
+        if current_best_individual > result.best_individual {
+            result.best_individual = current_best_individual.clone();
         }
+
+        result
+            .score_per_generation
+            .push(current_best_individual.fitness_score);
 
         population = generate_new_population(data, &population)?;
     }
 
-    Ok(best_individual)
+    Ok(result)
 }
 
 fn validate_data<T>(data: &GeneticAlgorithmData<T>) -> Result<(), Error>
