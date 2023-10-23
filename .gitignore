@@ -15,3 +15,4 @@ Cargo.lock
 
 # Ignore PNG graphs
 *.png
+graphs
