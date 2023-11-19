@@ -32,3 +32,12 @@ where
         self.fitness_score.cmp(&other.fitness_score)
     }
 }
+
+impl<T: Default> Default for Individual<T> {
+    fn default() -> Individual<T> {
+        Individual {
+            chromosome: Vec::new(),
+            fitness_score: T::default(),
+        }
+    }
+}

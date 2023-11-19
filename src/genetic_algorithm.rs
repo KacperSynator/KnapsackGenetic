@@ -154,7 +154,7 @@ where
         chromosome: (0..data_length)
             .map(|_| rng.gen_bool(BOOL_PROBABILITY))
             .collect(),
-        fitness_score: T::default(),
+        ..Default::default()
     }
 }
 
@@ -195,7 +195,7 @@ fn generate_new_population<T>(
     population: &Vec<Individual<T>>,
 ) -> Result<Vec<Individual<T>>, Error>
 where
-    T: Num + Ord + Clone + Sum + AddAssign + SampleUniform,
+    T: Num + Ord + Clone + Sum + AddAssign + SampleUniform + Default,
 {
     let mut new_population = Vec::new();
     new_population.reserve(data.population_size);
