@@ -6,12 +6,18 @@ use knapsack_genetic::selection_method::SelectionMethod;
 use knapsack_genetic::utils::{plot_graph, GraphData};
 use log::{error, info};
 
-fn run_and_plot_genetic_algorithm(data: &GeneticAlgorithmData<i32>, graph_data: &GraphData, n_optimal_results: &mut i32) {
+fn run_and_plot_genetic_algorithm(
+    data: &GeneticAlgorithmData<i32>,
+    graph_data: &GraphData,
+    n_optimal_results: &mut i32,
+) {
     match genetic_algorithm(data) {
         Ok(result) => {
-            if result.best_individual.fitness_score == 309 { *n_optimal_results += 1 };
-            // let cr_mr = format!("cr: {}, mr: {}",data.crossover_rate, data.mutation_rate);
-            // info!("{cr_mr} => Best chromosome: {:?}", result.best_individual);
+            if result.best_individual.fitness_score == 309 {
+                *n_optimal_results += 1
+            };
+            let cr_mr = format!("cr: {}, mr: {}", data.crossover_rate, data.mutation_rate);
+            info!("{cr_mr} => Best chromosome: {:?}", result.best_individual);
             if let Err(e) = plot_graph(&result, graph_data) {
                 error!("Failed to plot with error: {e}");
             }
@@ -29,12 +35,12 @@ fn main() {
     pretty_env_logger::init();
 
     let optimal = 309;
-    let n_reps = 100;
+    let n_reps = 1;
     let mut accuracy_table = String::from("cr\\mr =>\n");
 
     for crossover_rate in [0.1, 0.3, 0.5, 0.7, 0.9] {
         for mutation_rate in [0.1, 0.3, 0.5, 0.7, 0.9] {
-            let mut n_optimal_results = 0; 
+            let mut n_optimal_results = 0;
             for _ in 0..n_reps {
                 let data = GeneticAlgorithmData {
                     weights: vec![23, 31, 29, 44, 53, 38, 63, 85, 89, 82],
@@ -44,14 +50,14 @@ fn main() {
                     generations: 50,
                     crossover_method: CrossoverMethod::SinglePoint,
                     crossover_rate: crossover_rate,
-                    mutation_method: MutationMethod::BitFlip,
+                    mutation_method: MutationMethod::Inversion,
                     mutation_rate: mutation_rate,
-                    selection_method: SelectionMethod::Tournament { size: 5 },
+                    selection_method: SelectionMethod::Elitism { n_elites: 5, secondary_selection: Box::new(SelectionMethod::Roulette) },
                 };
-    
+
                 let out_file = format!("graphs/cr{crossover_rate}mr{mutation_rate}.png");
                 let title = format!("Cross={crossover_rate}, Mut={mutation_rate}");
-            
+
                 let graph_data = GraphData {
                     out_file: &out_file,
                     title: &title,
@@ -59,10 +65,10 @@ fn main() {
                     optimal_value_line: Some(optimal as f32),
                     ..Default::default()
                 };
-            
+
                 run_and_plot_genetic_algorithm(&data, &graph_data, &mut n_optimal_results);
             }
-            // println!();
+            println!();
             let accuracy = n_optimal_results as f32 / n_reps as f32;
             accuracy_table = format!("{accuracy_table} {} ", accuracy);
         }

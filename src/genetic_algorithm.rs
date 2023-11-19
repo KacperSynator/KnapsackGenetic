@@ -1,3 +1,7 @@
+use rand::distributions::uniform::SampleUniform;
+use std::iter::Sum;
+use std::ops::AddAssign;
+
 use anyhow::Error;
 use derive_more::{Display, Error};
 use log::debug;
@@ -7,7 +11,7 @@ use rand::Rng;
 use crate::crossover_method::{crossover_method, CrossoverMethod};
 use crate::individual::Individual;
 use crate::mutation_method::{mutation_method, MutationMethod};
-use crate::selection_method::{selection_method, SelectionMethod};
+use crate::selection_method::{select_elites, selection_method, SelectionMethod};
 
 const BOOL_PROBABILITY: f64 = 0.5;
 
@@ -52,7 +56,16 @@ pub fn genetic_algorithm<T>(
     data: &GeneticAlgorithmData<T>,
 ) -> Result<GeneticAlgorithmResultData<T>, Error>
 where
-    T: Num + std::fmt::Debug + Default + for<'a> std::iter::Sum<&'a T> + PartialOrd + Ord + Clone,
+    T: Num
+        + std::fmt::Debug
+        + Default
+        + for<'a> std::iter::Sum<&'a T>
+        + PartialOrd
+        + Ord
+        + Clone
+        + Sum
+        + AddAssign
+        + SampleUniform,
 {
     validate_data(data)?;
 
@@ -182,10 +195,14 @@ fn generate_new_population<T>(
     population: &Vec<Individual<T>>,
 ) -> Result<Vec<Individual<T>>, Error>
 where
-    T: Num + Ord + Clone,
+    T: Num + Ord + Clone + Sum + AddAssign + SampleUniform,
 {
     let mut new_population = Vec::new();
     new_population.reserve(data.population_size);
+
+    if let SelectionMethod::Elitism { n_elites, .. } = data.selection_method {
+        new_population.append(&mut select_elites(population, n_elites)?);
+    }
 
     while new_population.len() < data.population_size {
         let parents = (

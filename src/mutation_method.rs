@@ -50,7 +50,10 @@ where
     }
 
     let chromosome_len = new_individual.chromosome.len();
-    let (i,j) = (rng.gen_range(0..chromosome_len), rng.gen_range(0..chromosome_len));
+    let (i, j) = (
+        rng.gen_range(0..chromosome_len),
+        rng.gen_range(0..chromosome_len),
+    );
     new_individual.chromosome.swap(i, j);
 
     new_individual
