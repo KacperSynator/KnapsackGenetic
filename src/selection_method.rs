@@ -72,16 +72,16 @@ where
 
 fn handle_secondary_method<T>(
     population: &Vec<Individual<T>>,
-    secondary_method: &Box<SelectionMethod>,
+    secondary_method: &SelectionMethod,
 ) -> Result<Individual<T>, Error>
 where
     T: Num + Ord + Clone + Sum + AddAssign + SampleUniform,
 {
-    if let SelectionMethod::Elitism { .. } = **secondary_method {
+    if let SelectionMethod::Elitism { .. } = *secondary_method {
         return Err(Error::from(InvalidSecondarySelectionError));
     }
 
-    Ok(selection_method(population, &secondary_method)?)
+    selection_method(population, secondary_method)
 }
 
 fn tournament_selection<T>(
@@ -100,17 +100,14 @@ where
 
     let mut rng = rand::thread_rng();
 
-    let selected_individuals: Vec<Individual<T>> = population
+    Ok(population
         .choose_multiple(&mut rng, tournament_size)
         .cloned()
-        .collect();
-
-    let winner = selected_individuals.into_iter().max().unwrap();
-
-    Ok(winner)
+        .max()
+        .unwrap())
 }
 
-fn roulette_selection<T>(population: &Vec<Individual<T>>) -> Result<Individual<T>, Error>
+fn roulette_selection<T>(population: &[Individual<T>]) -> Result<Individual<T>, Error>
 where
     T: Num + Ord + Clone + Sum + AddAssign + SampleUniform,
 {

@@ -79,7 +79,7 @@ where
                 &GREEN,
             ))?
             .label(OPTIMAL_LEGEND_LABEL)
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &GREEN));
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], GREEN));
     }
 
     chart
@@ -91,12 +91,12 @@ where
             &RED,
         ))?
         .label(LEGEND_LABEL)
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], RED));
 
     chart
         .configure_series_labels()
-        .background_style(&WHITE.mix(0.8))
-        .border_style(&BLACK)
+        .background_style(WHITE.mix(0.8))
+        .border_style(BLACK)
         .draw()?;
 
     root.present()?;

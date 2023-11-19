@@ -49,10 +49,13 @@ fn main() {
                     population_size: 50,
                     generations: 50,
                     crossover_method: CrossoverMethod::SinglePoint,
-                    crossover_rate: crossover_rate,
+                    crossover_rate,
                     mutation_method: MutationMethod::Inversion,
-                    mutation_rate: mutation_rate,
-                    selection_method: SelectionMethod::Elitism { n_elites: 5, secondary_selection: Box::new(SelectionMethod::Roulette) },
+                    mutation_rate,
+                    selection_method: SelectionMethod::Elitism {
+                        n_elites: 5,
+                        secondary_selection: Box::new(SelectionMethod::Roulette),
+                    },
                 };
 
                 let out_file = format!("graphs/cr{crossover_rate}mr{mutation_rate}.png");
