@@ -20,7 +20,7 @@ selection_method: SelectionMethod::Roulette,
 ### Elitism (WIP)
 [Wikipedia - Elitism Selection](https://en.wikipedia.org/wiki/Selection_(genetic_algorithm)#Elitist_Selection)
 ```rust
-selection_method: SelectionMethod::Elitism { n_elites: 3},
+selection_method: SelectionMethod::Elitism { n_elites: 3, secondary_selection: Box::new(SelectionMethod::Roulette)},
 ```
 
 ## Crossover methods
@@ -32,6 +32,18 @@ For setting the crossover method `crossover_method` parameter is used and `cross
 crossover_method: CrossoverMethod::SinglePoint,
 ```
 
+### Multi Point
+[Wikipedia - Two-point and k-point crossover](https://en.wikipedia.org/wiki/Crossover_(genetic_algorithm)#Two-point_and_k-point_crossover)
+```rust
+crossover_method: CrossoverMethod::MutltiPoint { n_points: 5 },
+```
+
+### Uniform
+[Wikipedia - Uniform crossover](https://en.wikipedia.org/wiki/Crossover_(genetic_algorithm)#Uniform_crossover)
+```rust
+crossover_method: CrossoverMethod::Uniform,
+```
+
 ## Mutation methods
 For setting the crossover method `mutation_method` parameter is used and `mutation_rate` for probability of gene mutation. For available methods look below.
 
@@ -39,6 +51,18 @@ For setting the crossover method `mutation_method` parameter is used and `mutati
 [Wikipedia - Bit string mutation](https://en.wikipedia.org/wiki/Mutation_(genetic_algorithm)#Bit_string_mutation)
 ```rust
 mutation_method: MutationMethod::BitFlip,
+```
+
+### Swap
+Swaps to random genes in chromosome
+```rust
+mutation_method: MutationMethod::Swap,
+```
+
+### Inversion
+[Wikipedia - Inversion mutation](https://en.wikipedia.org/wiki/Mutation_(genetic_algorithm)#Inversion)
+```rust
+mutation_method: MutationMethod::Inversion,
 ```
 
 ## Build
@@ -56,6 +80,7 @@ Few prerequisites needs to be met:
 - `population_size` needs to be even and non-zero value
 - `crossover_rate` and `mutation_rate` probabilities needs to be in range [0, 1]
 - selection methods parameters like `Tournament {size}` or `Elitism {n_elites}` cannot be greater than `population_size`
+- `secondary_selection` for `Elitism` selection method cannot be `Elitism`
 
 ### Example
 Example usage can be found in [main.rs](src/main.rs):
