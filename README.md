@@ -112,7 +112,7 @@ const CAPACITY: i32 = 6404180;
 const OPTIMAL: i32 = 13549094;
 
 const POPULATION_SIZE: usize = 100;
-const GENERATIONS: usize = 1000;
+const GENERATIONS: usize = 100;
 const CROSSOVER_METHOD: CrossoverMethod = CrossoverMethod::MultiPoint { n_points: 2 };
 const CROSSOVER_RATE: f64 = 0.5;
 const MUTATATION_METHOD: MutationMethod = MutationMethod::BitFlip;
@@ -155,10 +155,18 @@ fn main() {
         Err(e) => error!("Genetic algorithm failed with error: {e}"),
     }
 }
-
-
 ```
+
+Run using:
+```bash
+RUST_LOG=info cargo run --release
+```
+
 The console output shoud look like:
 ```bash
 INFO  knapsack_genetic > Best chromosome: Individual { chromosome: [true, true, false, true, true, true, false, false, false, true, true, false, true, false, false, true, false, false, false, false, false, true, true, true], fitness_score: 13549094 }
 ```
+
+And similar graph should be generated in `out.png`:
+file:///home/kakkosbp/workspace/knapsack_genetic/out.png![image](https://github.com/KacperSynator/KnapsackGenetic/assets/62207289/e9987f2d-3914-4032-bb09-cac01926bcd8)
+
