@@ -82,6 +82,11 @@ Few prerequisites needs to be met:
 - selection methods parameters like `Tournament {size}` or `Elitism {n_elites}` cannot be greater than `population_size`
 - `secondary_selection` for `Elitism` selection method cannot be `Elitism`
 
+### Graph plotting
+A simple graph plotting is implemented using [plotters](https://docs.rs/plotters/latest/plotters/). To use it define a `GraphData` with graph options and then run 
+`plot_graph(&result, &graph_data)` where `result` is the output of `genetic_algorithm`
+function. Look at [example](#example) for further information.
+
 ### Example
 Example usage can be found in [main.rs](src/main.rs):
 ```rust
@@ -90,32 +95,70 @@ use knapsack_genetic::genetic_algorithm::{genetic_algorithm, GeneticAlgorithmDat
 use knapsack_genetic::mutation_method::MutationMethod;
 use knapsack_genetic::selection_method::SelectionMethod;
 
+use knapsack_genetic::utils::{plot_graph, GraphData};
 use log::{error, info};
+
+// Data from (P08) https://people.sc.fsu.edu/~jburkardt/datasets/knapsack_01/knapsack_01.html
+const WEIGHTS: &[i32] = &[
+    382745, 799601, 909247, 729069, 467902, 44328, 34610, 698150, 823460, 903959, 853665, 551830,
+    610856, 670702, 488960, 951111, 323046, 446298, 931161, 31385, 496951, 264724, 224916, 169684,
+];
+const PRICES: &[i32] = &[
+    825594, 1677009, 1676628, 1523970, 943972, 97426, 69666, 1296457, 1679693, 1902996, 1844992,
+    1049289, 1252836, 1319836, 953277, 2067538, 675367, 853655, 1826027, 65731, 901489, 577243,
+    466257, 369261,
+];
+const CAPACITY: i32 = 6404180;
+const OPTIMAL: i32 = 13549094;
+
+const POPULATION_SIZE: usize = 100;
+const GENERATIONS: usize = 1000;
+const CROSSOVER_METHOD: CrossoverMethod = CrossoverMethod::MultiPoint { n_points: 2 };
+const CROSSOVER_RATE: f64 = 0.5;
+const MUTATATION_METHOD: MutationMethod = MutationMethod::BitFlip;
+const MUTATION_RATE: f64 = 0.1;
 
 fn main() {
     pretty_env_logger::init();
 
     let data = GeneticAlgorithmData {
-        weights: vec![27, 10, 25, 25, 7],
-        prices: vec![13, 19, 7, 16, 3],
-        capacity: 66,
-        population_size: 50,
-        generations: 10,
-        crossover_method: CrossoverMethod::SinglePoint,
-        crossover_rate: 0.5,
-        mutation_method: MutationMethod::BitFlip,
-        mutation_rate: 0.05,
-        selection_method: SelectionMethod::Tournament { size: 10 },
+        weights: WEIGHTS.to_vec(),
+        prices: PRICES.to_vec(),
+        capacity: CAPACITY,
+        population_size: POPULATION_SIZE,
+        generations: GENERATIONS,
+        crossover_method: CROSSOVER_METHOD,
+        crossover_rate: CROSSOVER_RATE,
+        mutation_method: MUTATATION_METHOD,
+        mutation_rate: MUTATION_RATE,
+        selection_method: SelectionMethod::Elitism {
+            n_elites: 1,
+            secondary_selection: Box::new(SelectionMethod::Tournament { size: 10 }),
+        },
+    };
+
+    let graph_data = GraphData {
+        y_label_area_size: 60,
+        y_max_value: Some(OPTIMAL as f32 * 1.2),
+        optimal_value_line: Some(OPTIMAL as f32),
+        ..Default::default()
     };
 
     match genetic_algorithm(&data) {
-        Ok(result) => info!("Best chromosome: {:?}", result),
+        Ok(result) => {
+            info!("Best chromosome: {:?}", &result.best_individual);
+            if let Err(e) = plot_graph(&result, &graph_data) {
+                error!("Failed to plot with error: {e}");
+            }
+        }
+
         Err(e) => error!("Genetic algorithm failed with error: {e}"),
     }
 }
 
+
 ```
 The console output shoud look like:
 ```bash
- INFO  knapsack_genetic > Best chromosome: Individual { chromosome: [false, true, true, true, false], fitness_score: 48 }
+INFO  knapsack_genetic > Best chromosome: Individual { chromosome: [true, true, false, true, true, true, false, false, false, true, true, false, true, false, false, true, false, false, false, false, false, true, true, true], fitness_score: 13549094 }
 ```

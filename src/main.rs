@@ -6,76 +6,60 @@ use knapsack_genetic::selection_method::SelectionMethod;
 use knapsack_genetic::utils::{plot_graph, GraphData};
 use log::{error, info};
 
-fn run_and_plot_genetic_algorithm(
-    data: &GeneticAlgorithmData<i32>,
-    graph_data: &GraphData,
-    n_optimal_results: &mut i32,
-) {
-    match genetic_algorithm(data) {
-        Ok(result) => {
-            if result.best_individual.fitness_score == 309 {
-                *n_optimal_results += 1
-            };
-            let cr_mr = format!("cr: {}, mr: {}", data.crossover_rate, data.mutation_rate);
-            info!("{cr_mr} => Best chromosome: {:?}", result.best_individual);
-            if let Err(e) = plot_graph(&result, graph_data) {
-                error!("Failed to plot with error: {e}");
-            }
-        }
-        Err(e) => error!("Genetic algorithm failed with error: {e}"),
-    }
-}
+// Data from (P08) https://people.sc.fsu.edu/~jburkardt/datasets/knapsack_01/knapsack_01.html
+const WEIGHTS: &[i32] = &[
+    382745, 799601, 909247, 729069, 467902, 44328, 34610, 698150, 823460, 903959, 853665, 551830,
+    610856, 670702, 488960, 951111, 323046, 446298, 931161, 31385, 496951, 264724, 224916, 169684,
+];
+const PRICES: &[i32] = &[
+    825594, 1677009, 1676628, 1523970, 943972, 97426, 69666, 1296457, 1679693, 1902996, 1844992,
+    1049289, 1252836, 1319836, 953277, 2067538, 675367, 853655, 1826027, 65731, 901489, 577243,
+    466257, 369261,
+];
+const CAPACITY: i32 = 6404180;
+const OPTIMAL: i32 = 13549094;
 
-// Other example optimal 48
-// weights: vec![27, 10, 25, 25, 7],
-// prices: vec![13, 19, 7, 16, 3],
-// capacity: 66,
+const POPULATION_SIZE: usize = 100;
+const GENERATIONS: usize = 1000;
+const CROSSOVER_METHOD: CrossoverMethod = CrossoverMethod::MultiPoint { n_points: 2 };
+const CROSSOVER_RATE: f64 = 0.5;
+const MUTATATION_METHOD: MutationMethod = MutationMethod::BitFlip;
+const MUTATION_RATE: f64 = 0.1;
 
 fn main() {
     pretty_env_logger::init();
 
-    let optimal = 309;
-    let n_reps = 1;
-    let mut accuracy_table = String::from("cr\\mr =>\n");
+    let data = GeneticAlgorithmData {
+        weights: WEIGHTS.to_vec(),
+        prices: PRICES.to_vec(),
+        capacity: CAPACITY,
+        population_size: POPULATION_SIZE,
+        generations: GENERATIONS,
+        crossover_method: CROSSOVER_METHOD,
+        crossover_rate: CROSSOVER_RATE,
+        mutation_method: MUTATATION_METHOD,
+        mutation_rate: MUTATION_RATE,
+        selection_method: SelectionMethod::Elitism {
+            n_elites: 1,
+            secondary_selection: Box::new(SelectionMethod::Tournament { size: 10 }),
+        },
+    };
 
-    for crossover_rate in [0.1, 0.3, 0.5, 0.7, 0.9] {
-        for mutation_rate in [0.1, 0.3, 0.5, 0.7, 0.9] {
-            let mut n_optimal_results = 0;
-            for _ in 0..n_reps {
-                let data = GeneticAlgorithmData {
-                    weights: vec![23, 31, 29, 44, 53, 38, 63, 85, 89, 82],
-                    prices: vec![92, 57, 49, 68, 60, 43, 67, 84, 87, 72],
-                    capacity: 165, // optimal 309
-                    population_size: 50,
-                    generations: 50,
-                    crossover_method: CrossoverMethod::SinglePoint,
-                    crossover_rate,
-                    mutation_method: MutationMethod::Inversion,
-                    mutation_rate,
-                    selection_method: SelectionMethod::Elitism {
-                        n_elites: 5,
-                        secondary_selection: Box::new(SelectionMethod::Roulette),
-                    },
-                };
+    let graph_data = GraphData {
+        y_label_area_size: 60,
+        y_max_value: Some(OPTIMAL as f32 * 1.2),
+        optimal_value_line: Some(OPTIMAL as f32),
+        ..Default::default()
+    };
 
-                let out_file = format!("graphs/cr{crossover_rate}mr{mutation_rate}.png");
-                let title = format!("Cross={crossover_rate}, Mut={mutation_rate}");
-
-                let graph_data = GraphData {
-                    out_file: &out_file,
-                    title: &title,
-                    y_max_value: Some(optimal as f32 * 1.2),
-                    optimal_value_line: Some(optimal as f32),
-                    ..Default::default()
-                };
-
-                run_and_plot_genetic_algorithm(&data, &graph_data, &mut n_optimal_results);
+    match genetic_algorithm(&data) {
+        Ok(result) => {
+            info!("Best chromosome: {:?}", &result.best_individual);
+            if let Err(e) = plot_graph(&result, &graph_data) {
+                error!("Failed to plot with error: {e}");
             }
-            println!();
-            let accuracy = n_optimal_results as f32 / n_reps as f32;
-            accuracy_table = format!("{accuracy_table} {} ", accuracy);
         }
-        accuracy_table = format!("{accuracy_table}\n");
+
+        Err(e) => error!("Genetic algorithm failed with error: {e}"),
     }
-    println!("{accuracy_table}");
 }
